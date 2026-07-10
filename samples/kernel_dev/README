@@ -1,0 +1,79 @@
+Kernel Development Practice Modules
+=====================================
+
+This directory contains a set of progressively more complex kernel modules
+designed to help developers build familiarity with key Linux kernel
+programming concepts.
+
+Modules
+-------
+
+hello.c
+    The simplest possible loadable module.  Demonstrates the module
+    lifecycle (module_init / module_exit) and the pr_info() logging helper.
+
+params.c
+    Shows how to accept parameters at insmod time and expose them at
+    runtime via /sys/module/<name>/parameters/.  Covers module_param(),
+    MODULE_PARM_DESC(), and the int, charp, and bool parameter types.
+
+chardev.c
+    A minimal read/write character device.  Covers dynamic major
+    allocation, struct cdev, class_create() / device_create(), struct
+    file_operations, and safe user-space data transfer with
+    copy_to_user() / copy_from_user().
+
+procfs.c
+    Creates a read-only /proc/sample_info entry using the seq_file
+    interface (proc_create, proc_ops, single_open, seq_printf).
+
+Build
+-----
+
+The modules are wired into the kernel build system.  Enable them via
+menuconfig (Kernel hacking → Sample kernel code → Kernel development
+practice modules) or set the corresponding options directly::
+
+    CONFIG_SAMPLE_KERNEL_DEV=m
+    CONFIG_SAMPLE_KERNEL_DEV_HELLO=m
+    CONFIG_SAMPLE_KERNEL_DEV_PARAMS=m
+    CONFIG_SAMPLE_KERNEL_DEV_CHARDEV=m
+    CONFIG_SAMPLE_KERNEL_DEV_PROCFS=m
+
+Then build with the normal kernel build process::
+
+    make modules
+
+Out-of-tree build
+-----------------
+
+Each .c file can also be built as a standalone out-of-tree module.
+Create a local Makefile::
+
+    # Makefile
+    obj-m := hello.o
+
+And invoke::
+
+    make -C /lib/modules/$(shell uname -r)/build M=$(PWD) modules
+    make -C /lib/modules/$(shell uname -r)/build M=$(PWD) clean
+
+Usage
+-----
+
+After building::
+
+    insmod hello.ko
+    dmesg | tail
+
+    insmod params.ko greeting="Hi" count=3
+    cat /sys/module/params/parameters/greeting
+
+    insmod chardev.ko
+    echo "test" > /dev/chardev_sample
+    cat /dev/chardev_sample
+
+    insmod procfs.ko
+    cat /proc/sample_info
+
+    rmmod hello params chardev procfs
