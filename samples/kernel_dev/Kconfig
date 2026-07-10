@@ -1,0 +1,69 @@
+# SPDX-License-Identifier: GPL-2.0-only
+
+menuconfig SAMPLE_KERNEL_DEV
+	tristate "Kernel development practice modules"
+	help
+	  A collection of minimal kernel modules covering the fundamental
+	  building blocks of kernel programming: module lifecycle, parameters,
+	  character devices, and the /proc filesystem.
+
+	  Select individual sub-options below or choose 'm' here to build
+	  them all as loadable modules.
+
+if SAMPLE_KERNEL_DEV
+
+config SAMPLE_KERNEL_DEV_HELLO
+	tristate "Hello World module"
+	default m
+	help
+	  The simplest possible kernel module. Demonstrates:
+	  - module_init() / module_exit() lifecycle hooks
+	  - pr_info() for kernel log messages
+	  - MODULE_LICENSE / MODULE_AUTHOR / MODULE_DESCRIPTION
+
+	  Build and load with:
+	    make -C /lib/modules/$(uname -r)/build M=$(pwd) modules
+	    insmod hello.ko
+
+config SAMPLE_KERNEL_DEV_PARAMS
+	tristate "Module parameters"
+	default m
+	help
+	  Shows how to pass parameters to a module at load time and how
+	  they are exposed under /sys/module/<name>/parameters/ via sysfs.
+
+	  Demonstrates module_param(), MODULE_PARM_DESC(), and the commonly
+	  used types: int, charp (string), and bool.
+
+	  Load with custom values:
+	    insmod params.ko greeting="Hi" count=3 verbose=1
+
+config SAMPLE_KERNEL_DEV_CHARDEV
+	tristate "Character device driver"
+	default m
+	help
+	  A minimal read/write character device that illustrates:
+	  - alloc_chrdev_region() for dynamic major allocation
+	  - struct cdev with cdev_init() / cdev_add()
+	  - class_create() / device_create() to expose /dev/chardev_sample
+	  - struct file_operations: open, release, read, write
+	  - copy_to_user() / copy_from_user()
+
+	  After loading:
+	    echo "test" > /dev/chardev_sample
+	    cat /dev/chardev_sample
+
+config SAMPLE_KERNEL_DEV_PROCFS
+	tristate "procfs seq_file interface"
+	default m
+	help
+	  Creates a read-only /proc/sample_info entry using the seq_file
+	  interface (the recommended way to implement /proc entries).
+
+	  Demonstrates proc_create(), proc_ops, single_open(), and
+	  seq_printf() for formatted kernel-to-user output.
+
+	  After loading:
+	    cat /proc/sample_info
+
+endif # SAMPLE_KERNEL_DEV
